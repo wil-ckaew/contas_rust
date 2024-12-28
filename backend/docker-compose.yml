@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    container_name: contas_db
+    environment:
+      POSTGRES_USER: ckaew
+      POSTGRES_PASSWORD: senha123
+      POSTGRES_DB: dbcontas
+    ports:
+      - "6500:5432" # Alterando a porta local para 6500
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+volumes:
+  pgdata:
