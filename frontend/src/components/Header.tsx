@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import styles from './Header.module.css'; // Importando CSS module
+import styles from '../styles/Header.module.css'; // Importando CSS module
+//import styles from './Header.module.css'; // Importando CSS module
 import { HiMenu, HiX } from 'react-icons/hi'; // Ícones do menu
 
 const Header: React.FC = () => {
@@ -59,16 +60,12 @@ const Header: React.FC = () => {
         <nav className={`${styles.nav} ${isMenuOpen ? styles.navOpen : ''}`}>
           <ul className={styles.navList}>
             <li className={styles.navItem}><Link href="/users/users" className={styles.navLink}>Users</Link></li>
-            <li className={styles.navItem}><Link href="/parents/parents" className={styles.navLink}>Parentes</Link></li>
             <li className={styles.navItem}><Link href="/documents/documents" className={styles.navLink}>Documentos</Link></li>
-            <li className={styles.navItem}><Link href="/tasks/tasks" className={styles.navLink}>Tarefas</Link></li>
-            <li className={styles.navItem}><Link href="/students/students" className={styles.navLink}>Alunos</Link></li>
-            <li className={styles.navItem}><Link href="/videos/videos" className={styles.navLink}>Videos</Link></li>
-            <li className={styles.navItem}><Link href="/meus_videos/videos" className={styles.navLink}>Meus_Videos</Link></li>
             <li className={styles.navItem}><Link href="/uploads/uploads" className={styles.navLink}>Uploads</Link></li>
-            <li className={styles.navItem}><Link href="/allvideos/allvideos" className={styles.navLink}>all videos</Link></li>
             <li className={styles.navItem}><Link href="/photos/photos" className={styles.navLink}>Fotos_Geral</Link></li>
-            <li className={styles.navItem}><Link href="/photos" className={styles.navLink}>Fotos</Link></li>
+            <li className={styles.navItem}><Link href="/services" className={styles.navLink}>Serviços</Link></li>
+            <li className={styles.navItem}><Link href="/contact" className={styles.navLink}>Contato</Link></li>
+            <li className={styles.navItem}><Link href="/about" className={styles.navLink}>Abortar</Link></li>
             <li className={styles.navItem}><Link href="/" className={styles.navLink}>Home</Link></li>
           </ul>
         </nav>

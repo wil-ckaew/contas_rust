@@ -1,0 +1,82 @@
+/* EditAccount.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column; /* Garantir que o conteúdo esteja em uma coluna */
+  justify-content: flex-start;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #1f4037, #99f2c8); /* Gradiente igual ao index.tsx */
+  font-family: Arial, sans-serif;
+  margin: 0;
+}
+
+.mainContent {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  padding: 20px;
+  margin-top: 120px; /* Reduzi o espaço para aproximar o conteúdo do topo */
+}
+
+.formContainer {
+  background: white;
+  border-radius: 10px;
+  padding: 40px 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 100%;
+}
+
+.headerTitle {
+  font-size: 1.8rem;
+  color: #1f4037;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.inputGroup {
+  margin-bottom: 20px;
+}
+
+.label {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+  margin-top: 5px;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+}
+
+.buttonContainer {
+  text-align: center;
+}
+
+.button {
+  background-color: #1f4037;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 100%;
+}
+
+.button:hover {
+  background-color: #14532d;
+}
