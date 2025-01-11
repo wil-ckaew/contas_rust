@@ -62,7 +62,7 @@ const Header: React.FC = () => {
             <li className={styles.navItem}><Link href="/users/users" className={styles.navLink}>Users</Link></li>
             <li className={styles.navItem}><Link href="/documents/documents" className={styles.navLink}>Documentos</Link></li>
             <li className={styles.navItem}><Link href="/uploads/uploads" className={styles.navLink}>Uploads</Link></li>
-            <li className={styles.navItem}><Link href="/photos/photos" className={styles.navLink}>Fotos_Geral</Link></li>
+            <li className={styles.navItem}><Link href="/accounts/accounts" className={styles.navLink}>Contas</Link></li>
             <li className={styles.navItem}><Link href="/services" className={styles.navLink}>Serviços</Link></li>
             <li className={styles.navItem}><Link href="/contact" className={styles.navLink}>Contato</Link></li>
             <li className={styles.navItem}><Link href="/about" className={styles.navLink}>Abortar</Link></li>

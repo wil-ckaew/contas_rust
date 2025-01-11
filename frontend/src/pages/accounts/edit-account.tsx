@@ -21,17 +21,30 @@ const EditAccountPage: React.FC = () => {
   const [account, setAccount] = useState<Account | null>(null);
   const [formData, setFormData] = useState<{
     name: string;
-    value: number;
+    value: string; // Alterado para string para suportar formato brasileiro
     due_date: string;
     paid: boolean;
   }>({
     name: '',
-    value: 0,
+    value: '0,00',
     due_date: '',
     paid: false,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Função para formatar valores para o formato brasileiro
+  const formatToBR = (value: number): string => {
+    return value.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  // Função para normalizar valores do formato brasileiro para o padrão
+  const normalizeValue = (value: string): number => {
+    return parseFloat(value.replace('.', '').replace(',', '.'));
+  };
 
   useEffect(() => {
     if (id) {
@@ -41,7 +54,7 @@ const EditAccountPage: React.FC = () => {
           setAccount(response.data.account);
           setFormData({
             name: response.data.account.name,
-            value: response.data.account.value,
+            value: formatToBR(response.data.account.value),
             due_date: response.data.account.due_date.split('T')[0], // Ajuste para data
             paid: response.data.account.paid,
           });
@@ -60,20 +73,31 @@ const EditAccountPage: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+
+    // Para o campo "value", processar o formato brasileiro
+    if (name === 'value') {
+      const onlyNumbers = value.replace(/[^\d,]/g, ''); // Permitir apenas números e vírgula
+      setFormData((prevState) => ({
+        ...prevState,
+        [name]: onlyNumbers,
+      }));
+    } else {
+      setFormData((prevState) => ({
+        ...prevState,
+        [name]: type === 'checkbox' ? checked : value,
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (id && account) {
       try {
-        // Converte a data para o formato "YYYY-MM-DDT00:00:00Z"
+        // Converte o valor para o formato numérico antes de enviar
         const updatedFormData = {
           ...formData,
-          due_date: `${formData.due_date}T00:00:00Z`,
+          value: normalizeValue(formData.value), // Normaliza o valor
+          due_date: `${formData.due_date}T00:00:00Z`, // Converte a data para o formato esperado
         };
 
         // Envia os dados para a API
@@ -93,7 +117,7 @@ const EditAccountPage: React.FC = () => {
   if (error) return <p className="text-red-600">{error}</p>;
 
   return (
-    <div className="flex flex-col h-screen bg-blue-100"> {/* Altere a cor de fundo para bg-blue-100 */}
+    <div className="flex flex-col h-screen bg-blue-100"> {/* Alterada a cor de fundo */}
       <Header />
       <main className="flex flex-1 justify-center items-center py-6">
         <section className="w-full max-w-xl p-8 bg-white shadow-lg rounded-lg">
@@ -115,7 +139,7 @@ const EditAccountPage: React.FC = () => {
               <div>
                 <label htmlFor="value" className="block text-gray-700 font-medium">Value</label>
                 <input
-                  type="number"
+                  type="text" // Alterado para "text" para aceitar vírgulas
                   id="value"
                   name="value"
                   value={formData.value}

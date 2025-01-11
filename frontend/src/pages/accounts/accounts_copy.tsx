@@ -1,6 +1,8 @@
 // src/pages/accounts/accounts.tsx
+
 import React, { useState, useEffect } from "react";
-import { api, remindersApi } from "../../utils/axiosConfig";
+import { api, remindersApi  }from "../../utils/axiosConfig"; // Para a API principal
+//import remindersApi from "../../utils/axiosRemindersConfig"; // Para a API Python
 import AccountCardComponent from "../../components/AccountCardComponent";
 import Header from "../../components/Header";
 import Reminders from "../../components/Reminders";
@@ -16,13 +18,6 @@ interface Account {
   prediction?: string;
   created_at?: string | null;
 }
-const formatDate = (date: string): string => {
-  const parsedDate = new Date(date);
-  const day = String(parsedDate.getDate()).padStart(2, "0");
-  const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
-  const year = parsedDate.getFullYear();
-  return `${day}/${month}/${year}`;
-};
 
 const AccountsPage: React.FC = () => {
   const router = useRouter();
@@ -31,32 +26,27 @@ const AccountsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Estado para paginação
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3;
+  const itemsPerPage = 5;
 
+  // Estado para busca
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Estado para o painel de predição
   const [isPredictModalOpen, setPredictModalOpen] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [dueDate, setDueDate] = useState<string>("");
   const [value, setValue] = useState<number | null>(null);
 
-  const [selectedMonth, setSelectedMonth] = useState<string>("");
-  const [showReminders, setShowReminders] = useState<boolean>(true);
-
-  // Fetch accounts based on the selected month
+  // Função para buscar as contas
   useEffect(() => {
     const fetchAccounts = async () => {
-      if (!selectedMonth) return;
-
-      setLoading(true);
       try {
-        const response = await api.get<{ accounts: Account[] }>("/api/accounts", {
-          params: { month: selectedMonth },
-        });
+        const response = await api.get<{ accounts: Account[] }>("/api/accounts");
         setAccounts(response.data.accounts || []);
         setFilteredAccounts(response.data.accounts || []);
         setError(null);
-        setShowReminders(false);
       } catch (error) {
         const errMessage =
           error instanceof AxiosError
@@ -69,25 +59,28 @@ const AccountsPage: React.FC = () => {
     };
 
     fetchAccounts();
-  }, [selectedMonth]);
+  }, []);
 
+  // Atualiza a lista filtrada com base na busca
   useEffect(() => {
     const lowerQuery = searchQuery.toLowerCase();
     const filtered = accounts.filter((account) =>
       account.name.toLowerCase().includes(lowerQuery)
     );
     setFilteredAccounts(filtered);
-    setCurrentPage(1);
+    setCurrentPage(1); // Reseta para a primeira página ao buscar
   }, [searchQuery, accounts]);
 
+  // Funções de navegação
   const handleAddAccount = () => router.push("/accounts/add-account");
   const handleEdit = (id: string) => router.push(`/accounts/edit-account?id=${id}`);
 
+  // Função para excluir uma conta
   const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir esta conta?")) {
       try {
         await api.delete(`/api/accounts/${id}`);
-        setAccounts((prev) => prev.filter((account) => account.id !== id));
+        setAccounts((prevAccounts) => prevAccounts.filter((account) => account.id !== id));
         alert("Conta excluída com sucesso.");
       } catch (error) {
         const errMessage =
@@ -99,11 +92,13 @@ const AccountsPage: React.FC = () => {
     }
   };
 
+  // Abrir painel para predição
   const openPredictModal = (id: string) => {
     setSelectedAccountId(id);
     setPredictModalOpen(true);
   };
 
+  // Fechar painel de predição
   const closePredictModal = () => {
     setSelectedAccountId(null);
     setDueDate("");
@@ -111,53 +106,43 @@ const AccountsPage: React.FC = () => {
     setPredictModalOpen(false);
   };
 
+  // Função para enviar predição
   const handlePredictPayment = async () => {
-    if (!selectedAccountId || !dueDate || !value) {
-      alert("Preencha todos os campos para realizar a predição.");
+    if (!selectedAccountId || !dueDate || value === null) {
+      alert("Preencha todos os campos.");
       return;
     }
 
     try {
-      const account = accounts.find((acc) => acc.id === selectedAccountId);
-      if (!account) {
-        alert("Conta não encontrada.");
-        return;
-      }
-
-      const response = await remindersApi.post(`/api/accounts/${selectedAccountId}/predict_payment`, {
-        valor: value,
-        due_date: dueDate,
-      });
-
-      const { prediction } = response.data;
+      const response = await remindersApi.post<{ prediction: string }>(
+        `/api/accounts/${selectedAccountId}/predict_payment`,
+        {
+          account_id: selectedAccountId,
+          due_date: dueDate,
+          valor: value,
+        }
+      );
 
       setAccounts((prevAccounts) =>
         prevAccounts.map((account) =>
           account.id === selectedAccountId
-            ? {
-                ...account,
-                prediction,
-                paid: true,
-                due_date: dueDate,
-              }
+            ? { ...account, prediction: response.data.prediction }
             : account
         )
       );
 
+      alert(`Predição de pagamento: ${response.data.prediction}`);
       closePredictModal();
-      alert(`Predição realizada para a conta ${account.name}: ${prediction}`);
     } catch (error) {
-      alert("Erro ao realizar a predição.");
+      const errMessage =
+        error instanceof AxiosError
+          ? `Erro na predição: ${error.response?.data.error || error.message}`
+          : "Erro desconhecido na predição.";
+      alert(errMessage);
     }
   };
 
-  const handleMonthChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedMonth(event.target.value);
-    setAccounts([]);
-    setSearchQuery("");
-    setShowReminders(true);
-  };
-
+  // Paginação
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedAccounts = filteredAccounts.slice(startIndex, endIndex);
@@ -180,21 +165,6 @@ const AccountsPage: React.FC = () => {
           </div>
 
           <div className="mb-6">
-            <select
-              value={selectedMonth}
-              onChange={handleMonthChange}
-              className="w-full px-4 py-2 border rounded-lg"
-            >
-              <option value="">Selecione um mês:</option>
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i} value={(i + 1).toString().padStart(2, "0")}>
-                  {new Date(0, i).toLocaleString("pt-BR", { month: "long" })}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="mb-6">
             <input
               type="text"
               placeholder="Buscar contas..."
@@ -204,29 +174,29 @@ const AccountsPage: React.FC = () => {
             />
           </div>
 
-          {showReminders && <Reminders />}
+          <Reminders />
 
           {loading ? (
             <p className="text-center text-gray-600">Carregando...</p>
           ) : error ? (
             <p className="text-center text-red-600">{error}</p>
           ) : paginatedAccounts.length > 0 ? (
-            paginatedAccounts.map((account) => (
-              <AccountCardComponent
-                key={account.id}
-                account={{
-                  ...account,
-                  due_date: formatDate(account.due_date), // Format the due_date
-                }}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onPredict={() => openPredictModal(account.id)}
-              />
-            ))
+            <div className="space-y-4">
+              {paginatedAccounts.map((account) => (
+                <AccountCardComponent
+                  key={account.id}
+                  account={account}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onPredict={() => openPredictModal(account.id)}
+                />
+              ))}
+            </div>
           ) : (
             <p className="text-center text-gray-600">Nenhuma conta disponível.</p>
           )}
 
+          {/* Controles de paginação */}
           <div className="flex justify-center mt-6 space-x-4">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -249,62 +219,47 @@ const AccountsPage: React.FC = () => {
         </div>
       </main>
 
+      {/* Painel de Predição */}
       {isPredictModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-1/3">
-            <h2 className="text-2xl mb-4">Predição de Pagamento</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handlePredictPayment();
-              }}
-            >
-              {/* Exibindo o nome da conta */}
-              <div className="mb-4">
-                <label className="block text-gray-700">Conta</label>
-                <p className="text-gray-900">{accounts.find((account) => account.id === selectedAccountId)?.name}</p>
-              </div>
-
-              <div className="mb-4">
-                <label htmlFor="dueDate" className="block text-gray-700">
-                  Data de Vencimento
-                </label>
-                <input
-                  type="date"
-                  id="dueDate"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg"
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="value" className="block text-gray-700">
-                  Valor
-                </label>
-                <input
-                  type="number"
-                  id="value"
-                  value={value ?? ""}
-                  onChange={(e) => setValue(Number(e.target.value))}
-                  className="w-full px-4 py-2 border rounded-lg"
-                />
-              </div>
-              <div className="flex justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={closePredictModal}
-                  className="px-4 py-2 bg-gray-400 text-white rounded-lg"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-                >
-                  Confirmar
-                </button>
-              </div>
-            </form>
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Predizer Pagamento</h2>
+            <div className="mb-4">
+              <label className="block text-gray-700">ID da Conta</label>
+              <p className="text-gray-900">{selectedAccountId}</p>
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700">Data de Vencimento</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700">Valor</label>
+              <input
+                type="number"
+                value={value || ""}
+                onChange={(e) => setValue(Number(e.target.value))}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={closePredictModal}
+                className="px-4 py-2 bg-gray-400 text-white rounded-lg"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handlePredictPayment}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+              >
+                Confirmar
+              </button>
+            </div>
           </div>
         </div>
       )}

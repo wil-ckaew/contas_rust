@@ -1,11 +1,14 @@
-// src/utils/axiosConfig.ts
-import axios from 'axios';
+// src/utils/axiosConfig.js
+import axios from "axios";
 
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080', // URL base para a API
-  headers: {
-    'Content-Type': 'application/json'
-  }
+// Cliente para o backend Rust
+export const api = axios.create({
+  baseURL: "http://127.0.0.1:8080", // Backend Rust
+  timeout: 5000,
 });
 
-export default api;
+// Cliente para o backend Python
+export const remindersApi = axios.create({
+  baseURL: "http://127.0.0.1:5000", // Backend Python
+  timeout: 5000,
+});
